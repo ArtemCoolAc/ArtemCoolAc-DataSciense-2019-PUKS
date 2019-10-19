@@ -1,0 +1,26 @@
+CREATE TABLE SirenaV8 
+(
+	PaxName VARCHAR(50) NOT NULL,
+	PaxBirthDate VARCHAR(20) NULL,
+	DepartDate VARCHAR(10) NOT NULL,
+	DepartTime TIME NOT NULL,
+	ArrivalDate DATE NOT NULL,
+	ArrivalTime TIME NOT NULL,
+	Flight VARCHAR(20) NOT NULL,
+	CodeSh VARCHAR(3) NULL,
+	From_ VARCHAR(3) NOT NULL,
+	Dest VARCHAR(3) NOT NULL,
+	Code VARCHAR(10) NOT NULL,
+	e_Ticket VARCHAR(20) NOT NULL,
+	TravelDoc VARCHAR(20) NOT NULL,
+	Seat VARCHAR(20) NULL,
+	Meal VARCHAR(20) NULL,
+	TrvCls VARCHAR(10) NULL,
+	Fare VARCHAR(20) NOT NULL,
+	Baggage VARCHAR(20)  NULL,
+	PaxAdditionalInfo VARCHAR(30) NULL,
+	SomeInfo VARCHAR(70) NULL,
+	AgentInfo VARCHAR(30) NULL
+)
+COPY sirenav8(PaxName,PaxBirthDate,DepartDate,DepartTime,ArrivalDate, ArrivalTimE,Flight,CodeSh,From_,Dest,Code,e_Ticket,TravelDoc,Seat,Meal,TrvCls,Fare,Baggage,PaxAdditionalInfo,SomeInfo,AgentInfo) 
+FROM 'C:\"Path"\sirena.csv' DELIMITER ';' CSV HEADER;
