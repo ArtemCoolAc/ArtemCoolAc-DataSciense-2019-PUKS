@@ -1,0 +1,22 @@
+CREATE TABLE aeroV1(
+PaxFI VARCHAR(50) NULL,
+e_ticket VARCHAR(50) NULL,
+PaxProblem VARCHAR(100) NULL,
+PNR VARCHAR(10) NULL,
+Seat VARCHAR(10) NULL,
+AgentInfo VARCHAR(100) NULL,
+From_ VARCHAR(30) NULL,
+Dest VARCHAR(30) NULL,
+CodeFrom VARCHAR(10) NULL,
+CodeDest VARCHAR(10) NULL,
+Flight VARCHAR (10) NULL,
+Date_ DATE NULL,
+Time_ TIME NULL,
+Sequence_ INT NULL,
+Gender VARCHAR(10) NULL,
+SomeInfo VARCHAR(30) NULL,
+TrvCls VARCHAR(5) NULL
+)
+
+COPY aeroV1(PaxFI,e_ticket,PaxProblem,PNR,Seat,AgentInfo,From_,Dest,CodeFrom,CodeDest,Flight,Date_,Time_,Sequence_,Gender,SomeInfo,TrvCls) 
+FROM 'C:\"Path"\aero.csv' DELIMITER ';' CSV HEADER;
