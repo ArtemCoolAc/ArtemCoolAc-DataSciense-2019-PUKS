@@ -1,0 +1,5 @@
+First Name, Last Name, NickName, Sex, CodeShare, Passports,
+
+DateFlight, CodeShare, Arrival City, Arrival Port, Arrival Country,
+
+Departure City, Departure Airport, Departure Country
