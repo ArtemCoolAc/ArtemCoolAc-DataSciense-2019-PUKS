@@ -1,0 +1,21 @@
+CREATE TABLE forumprofilesv1(
+	first_name VARCHAR(30) NULL,
+	last_name VARCHAR(30) NULL,
+	nickname VARCHAR(30) NOT NULL,
+	gender VARCHAR(30) NULL,
+	travel_document VARCHAR(100) NULL,
+	date_ DATE NULL,
+	codeshare VARCHAR(10) NULL,
+	from_ VARCHAR(30) NULL,
+	codefrom VARCHAR(30) NULL,
+	country_from VARCHAR(30) NULL,
+	flight VARCHAR(30) NULL,
+	dest VARCHAR(30) NULL,
+	codedest VARCHAR(30) NULL,
+	countrydest VARCHAR(30) NULL,
+	trvcls VARCHAR(30) NULL,
+	someinfo_program VARCHAR(30) NULL,
+	someinfo_number VARCHAR(30) NULL
+);
+==========================================
+COPY forumprofilesv1 FROM 'C:\"Path"\forumprofiles.csv DELIMITER ',' CSV HEADER;

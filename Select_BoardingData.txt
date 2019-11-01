@@ -1,0 +1,18 @@
+CREATE TABLE boardingv1(
+	first_name VARCHAR(30) NULL,
+	second_name VARCHAR(30) NULL,
+	last_name VARCHAR(30) NULL,
+	gender VARCHAR(30) NULL,
+	paxbirthdate VARCHAR(30) NULL,
+	traveldoc VARCHAR(30) NULL,
+	code VARCHAR(30) NULL,
+	e_ticket VARCHAR(30) NULL,
+	baggage VARCHAR(30) NULL,
+	date_ DATE NULL,
+	time_ TIME NULL,
+	flight VARCHAR(30) NULL,
+	codesh VARCHAR(30) NULL,
+	dest VARCHAR(30) NULL
+)
+============================
+COPY boardingv1 FROM 'C:\Games\BoardingData.csv' DELIMITER ';' CSV HEADER
