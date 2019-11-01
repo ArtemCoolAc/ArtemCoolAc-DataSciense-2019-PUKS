@@ -1,0 +1,17 @@
+CREATE TABLE points(
+	uid INT NULL,
+	first_name VARCHAR(30) NULL,
+	last_name VARCHAR(30) NULL,
+	cardstype VARCHAR(30) NULL,
+	someinfo VARCHAR(30) NULL,
+	bonusprogram VARCHAR(30) NULL,
+	activitiestype VARCHAR(30) NULL,
+	activity VARCHAR(30) NULL,
+	flight VARCHAR(30) NULL,
+	date_ DATE NULL,
+	from_ VARCHAR(30) NULL,
+	dest VARCHAR(30) NULL,
+	fare VARCHAR(30) NULL
+)
+==================================================
+COPY points FROM 'C:\"Path"\PointzAggregator-AirlinesData.csv' DELIMITER ',' CSV HEADER;
