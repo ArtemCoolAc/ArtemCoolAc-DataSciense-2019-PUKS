@@ -1,0 +1,20 @@
+CREATE TABLE timetable_ 
+(
+	from_ VARCHAR(30) NULL,
+	country_from VARCHAR(30) NULL,
+	codefrom VARCHAR(30) NULL,
+	dest VARCHAR(30) NULL,
+	country_dest VARCHAR(30) NULL,
+	codedest VARCHAR(30) NULL,
+	date_begin DATE NULL,
+	date_end DATE NULL,
+	days_ VARCHAR(30) NULL,
+	departtime TIME NULL,
+	arrivaltime TIME NULL,
+	flight VARCHAR(30) NULL,
+	aircraft VARCHAR(30) NULL,
+	traveltime VARCHAR(30) NULL
+)
+
+============================
+COPY timetable_ FROM 'C:\"Path"\page6_pdf.csv' DELIMITER ',' CSV HEADER 
