@@ -1,0 +1,139 @@
+// SUBSTRING( sirenav8.someinfo,7,15) AS someinfo,  - copying useful information from column
+// CASE WHEN sirenav8.codesh='NO' THEN FALSE WHEN sirenav8.codesh='YES' THEN TRUE END AS codesh, 
+// to normalize codesh data
+//CASE WHEN paxbirthdate=' N/A' THEN NULL WHEN paxbirthdate!=' N/A' THEN DATE SUBSTRING(sirenav8.paxbirthdate,2,20) END AS paxbirthdate,
+//to make DATE FROM VARCHAR(30)
+CREATE TABLE sirena AS
+(
+	SELECT 	sirenav8.paxname,
+			CASE WHEN sirenav8.paxbirthdate=' N/A' THEN NULL WHEN sirenav8.paxbirthdate!=' N/A' THEN DATE (SUBSTRING(sirenav8.paxbirthdate,2,20)) END AS paxbirthdate,
+			DATE (sirenav8.departdate) AS departdate, 
+			sirenav8.departtime, 
+			sirenav8.arrivaldate, 
+			sirenav8.arrivaltime, 
+			sirenav8.flight,
+			CASE WHEN sirenav8.codesh='NO' THEN FALSE WHEN sirenav8.codesh='YES' THEN TRUE END AS codesh, 
+			sirenav8.from_, 
+			sirenav8.dest, 
+			sirenav8.code, 
+			sirenav8.e_ticket, 
+			sirenav8.traveldoc, 
+			CASE WHEN sirenav8.meal IS NOT NULL THEN SUBSTRING(sirenav8.meal,2,10) WHEN sirenav8.meal IS NULL THEN NULL END AS meal,
+			SUBSTRING(sirenav8.trvcls,2,1) AS trvcls, 
+			sirenav8.fare, 
+			sirenav8.baggage, 
+			sirenav8.paxadditionalinfo,
+			SUBSTRING( sirenav8.someinfo,7,15) AS someinfo, 
+			SUBSTRING(sirenav8.agentinfo,2,30) AS agentinfo
+		FROM sirenav8
+)
+==================================================
+//PaxProblem is NULL because after analyzing data 
+//CASE WHEN aerov1.gender='MR' THEN 'Male' WHEN aerov1.gender='MRS' THEN 'Female' AS gender,
+//to normalize data
+//agentinfo,paxproblem and seat has been left because after analyze they has been found identical
+CREATE TABLE aero AS
+(
+	SELECT 	aerov1.paxfi AS paxname,
+			aerov1.e_ticket,
+			aerov1.pnr,
+			aerov1.from_,
+			aerov1.dest,
+			aerov1.codefrom,
+			aerov1.codedest,
+			aerov1.flight,
+			aerov1.date_,
+			aerov1.time_,
+			aerov1.sequence_,
+			CASE WHEN aerov1.gender='MR' THEN 'Male' WHEN aerov1.gender='MRS' THEN 'Female' END AS gender,
+			aerov1.someinfo,
+			aerov1.trvcls
+		FROM aerov1
+)
+====================================================================
+//CAST(SUBSTRING(forumprofilesv1.nickname,14,20) AS integer) AS fid, 
+//to extract unique ID of user
+//CASE WHEN forumprofilesv1.codeshare='False' THEN FALSE WHEN forumprofilesv1.codeshare='True' THEN TRUE END AS codesh,		
+//to cast VARCHAR AS boolean
+//(forumprofilesv1.someinfo_program || forumprofilesv1.someinfo_number) AS someinfo
+//to unify somedata info
+CREATE TABLE forumprofiles AS
+(
+	SELECT 	forumprofilesv1.first_name,
+			forumprofilesv1.last_name,
+			CAST(SUBSTRING(forumprofilesv1.nickname,14,20) AS integer) AS fid,
+			forumprofilesv1.gender,
+			forumprofilesv1.date_,
+			CASE WHEN forumprofilesv1.codeshare='False' THEN FALSE WHEN forumprofilesv1.codeshare='True' THEN TRUE END AS codesh,		
+			forumprofilesv1.from_,
+			forumprofilesv1.codefrom,
+			forumprofilesv1.country_from,
+			forumprofilesv1.flight,
+			forumprofilesv1.dest,
+			forumprofilesv1.codedest,
+			forumprofilesv1.countrydest AS country_dest,
+			forumprofilesv1.trvcls AS FORUM_trvcls,
+			(forumprofilesv1.someinfo_program || forumprofilesv1.someinfo_number) AS someinfo
+	FROM forumprofilesv1
+)
+==========================================================================
+//MAKE_DATE(CAST(SUBSTRING(boardingv1.paxbirthdate,7,4) AS INTEGER),CAST(SUBSTRING(boardingv1.paxbirthdate,1,2) AS INTEGER),CAST(SUBSTRING(boardingv1.paxbirthdate,4,2) AS INTEGER)) AS paxbirthdate,
+//making date format from VARCHAR
+//CASE WHEN boardingv1.code='Not presented' THEN NULL WHEN boardingv1.code!='Not presented' THEN boardingv1.code END AS code,
+//normalize data
+//CASE WHEN boardingv1.e_ticket='Not presented' THEN NULL WHEN boardingv1.e_ticket!='Not presented' THEN boardingv1.e_ticket END AS e_ticket,
+//normalize data
+//CASE WHEN boardingv1.codesh='Own' THEN FALSE WHEN boardingv1.codesh='Operated' THEN TRUE END AS codesh,
+//normalize data with other tables
+CREATE TABLE boarding AS(
+	SELECT	boardingv1.first_name,
+			boardingv1.second_name,
+			boardingv1.last_name,
+			boardingv1.gender,
+			MAKE_DATE(CAST(SUBSTRING(boardingv1.paxbirthdate,7,4) AS INTEGER),CAST(SUBSTRING(boardingv1.paxbirthdate,1,2) AS INTEGER),CAST(SUBSTRING(boardingv1.paxbirthdate,4,2) AS INTEGER)) AS paxbirthdate,
+			boardingv1.traveldoc,
+			CASE WHEN boardingv1.code='Not presented' THEN NULL WHEN boardingv1.code!='Not presented' THEN boardingv1.code END AS code,
+			CASE WHEN boardingv1.e_ticket='Not presented' THEN NULL WHEN boardingv1.e_ticket!='Not presented' THEN boardingv1.e_ticket END AS e_ticket,
+			boardingv1.baggage,
+			boardingv1.date_,
+			boardingv1.time_,
+			boardingv1.flight,
+			CASE WHEN boardingv1.codesh='Own' THEN FALSE WHEN boardingv1.codesh='Operated' THEN TRUE END AS codesh,
+			boardingv1.dest
+			FROM boardingV1
+)
+=====================================================
+//CASE WHEN timetable_.days_ LIKE '%1%' THEN TRUE ELSE FALSE END AS sunday,
+//CASE WHEN timetable_.days_ LIKE '%2%'  THEN TRUE ELSE FALSE END AS monday,
+//CASE WHEN timetable_.days_ LIKE '%3%'  THEN TRUE ELSE FALSE END AS tuesday,
+//CASE WHEN timetable_.days_ LIKE '%4%' THEN TRUE ELSE FALSE END AS wednesday,
+//CASE WHEN timetable_.days_ LIKE '%5%' THEN TRUE ELSE FALSE END AS thrusday,
+//CASE WHEN timetable_.days_ LIKE '%6%' THEN TRUE ELSE FALSE END AS friday,
+//CASE WHEN timetable_.days_ LIKE '%7%' THEN TRUE ELSE FALSE END AS saturday,
+//to make schedule from VARCHAR
+//MAKE_TIME(CAST(SUBSTRING(timetable_.traveltime,1,1)AS INTEGER),CASE WHEN CHAR_LENGTH(timetable_.traveltime)<5 THEN CAST(SUBSTRING(timetable_.traveltime,3,1)AS INTEGER) ELSE CAST(SUBSTRING(timetable_.traveltime,3,2)AS INTEGER) END,0)  AS traveltime
+//to make time from VARCHAR
+CREATE TABLE timetable AS
+(
+	SELECT 	timetable_.from_,
+			timetable_.country_from,
+			timetable_.codefrom,
+			timetable_.dest,
+			timetable_.country_dest,
+			timetable_.codedest,
+			timetable_.date_begin,
+			timetable_.date_end,
+			CASE WHEN timetable_.days_ LIKE '%1%' THEN TRUE ELSE FALSE END AS sunday,
+			CASE WHEN timetable_.days_ LIKE '%2%'  THEN TRUE ELSE FALSE END AS monday,
+			CASE WHEN timetable_.days_ LIKE '%3%'  THEN TRUE ELSE FALSE END AS tuesday,
+			CASE WHEN timetable_.days_ LIKE '%4%' THEN TRUE ELSE FALSE END AS wednesday,
+			CASE WHEN timetable_.days_ LIKE '%5%' THEN TRUE ELSE FALSE END AS thrusday,
+			CASE WHEN timetable_.days_ LIKE '%6%' THEN TRUE ELSE FALSE END AS friday,
+			CASE WHEN timetable_.days_ LIKE '%7%' THEN TRUE ELSE FALSE END AS saturday,
+			timetable_.departtime,
+			timetable_.arrivaltime,
+			timetable_.flight,
+			timetable_.aircraft,
+			MAKE_TIME(CAST(SUBSTRING(timetable_.traveltime,1,1)AS INTEGER),CASE WHEN CHAR_LENGTH(timetable_.traveltime)<5 THEN CAST(SUBSTRING(timetable_.traveltime,3,1)AS INTEGER) ELSE CAST(SUBSTRING(timetable_.traveltime,3,2)AS INTEGER) END,0)  AS traveltime
+ 		FROM timetable_
+)
