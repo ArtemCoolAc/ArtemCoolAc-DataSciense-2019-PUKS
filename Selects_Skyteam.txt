@@ -1,0 +1,12 @@
+CREATE TABLE skyteam (
+	date_ DATE NULL,
+	flight VARCHAR(30) NULL,
+	someinfo  VARCHAR(30) NULL,
+	trvcls CHAR NULL,
+	fare VARCHAR(30) NULL,
+	codefrom VARCHAR(30) NULL,
+	status VARCHAR(30) NULL,
+	codedest VARCHAR(30) NULL
+)
+==============================================
+COPY skyteam FROM 'C:\"path"\SkyTeam-Exchange.csv' DELIMITER ',' CSV HEADER
