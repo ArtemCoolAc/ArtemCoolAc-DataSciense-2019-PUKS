@@ -1,0 +1,33 @@
+United Kingdom
+United Arab Emirates
+==========================================================
+CREATE TABLE countries(
+	code_ VARCHAR(30) UNIQUE NOT NULL,
+	city VARCHAR(30) NOT NULL,
+	country VARCHAR(30) NOT NULL
+)
+===========================================================
+INSERT 	INTO countries SELECT DISTINCT codefrom,from_,
+		CASE	WHEN country_from LIKE 'United%' AND country_from!='United Kingdom' AND country_from!='United Arab Emirates'
+				THEN 'United States of America' 
+				ELSE country_from 
+		END
+FROM forumprofiles WHERE country_from IS NOT NULL
+;
+INSERT INTO countries SELECT DISTINCT codedest,dest,country_dest FROM timetable WHERE codedest NOT IN (SELECT code_ FROM countries)
+;
+INSERT INTO countries VALUES 	('CPC','San Martin De Los Andes','Argentina'),
+				('MBS','Saginaw/Midland/Bay C. MI','United States of America'),
+				('MYR','MYR','United States of America')
+
+
+INSERT INTO countries VALUES 	('PHF','Newport News/Williamsb VA','United States of America'),
+				('RUN','Saint Denis De La Reunion','France'),
+				('SAR','Hong Kong','China'),
+				('SKD','Samarkand International','Uzbekistan'),
+				('TRI','Bristol/Johnson/Kingsport TN','United States of America'),
+				('ZSE','Saint Pierre De La Reunion','France')
+INSERT INTO countries VALUES 	('NDS','SAINT THOMAS','Australia'),
+				('NIA','DAR ES SALAAM','Tanzania'),
+				('REA','SEOUL','South Korea'),
+				('OVA','CHISINAU','Moldova')

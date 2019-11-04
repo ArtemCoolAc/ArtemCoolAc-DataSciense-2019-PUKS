@@ -1,0 +1,42 @@
+unique data of user:
+-aero 		
+		e_ticket(always);
+		someinfo(may be NULL);
+
+-boarding	
+		traveldoc(always);
+		e_ticket(may be NULL);
+		{
+			first_name;
+			//second_name(may be different for one person);
+			last_name;
+		}
+
+-forumprofiles---------
+		someinfo(always);
+
+-points++++++++++++++++		
+		someinfo(may be NULL);
+		{
+			first_name;
+			last_name;			
+		}
+
+-sirena++++++++++++++++
+		e_ticket(always);
+		traveldoc(may be NULL);
+		someinfo(may be NULL);
+
+-skyteam---------------	
+		someinfo(always);
+
+-timetable doesn't have information about PaxUsers.
+
+======================================================================================
+points unique information about users
+-someinfo,first_name,last_name
+condition someinfo IS NOT NULL
+
+aero unique information about users
+-e_ticket
+

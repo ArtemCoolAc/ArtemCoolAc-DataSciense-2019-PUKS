@@ -1,0 +1,26 @@
+==========================================================
+Travel Class (trvcls)
+From the top class to the worst class
+_|_
+\ /
+ v
+F or A = First Class
+J or C = Business Class
+P = Premium Economy Class
+Y = Economy Class
+
+other definitions [from forumprofiles]
+Elite+
+Elite
+Basic
+==========================================================
+Code sharing (codesh)
+Own equal false
+Operated equal true
+SELECT DISTINCT S.codesh,B.codesh FROM sirena AS S, boardingv1 AS B WHERE S.e_ticket=B.e_ticket
+
+===================================================================
+Sequence Number (sequence_) definition
+It's usually the order in which tickets have been bought for the flight. If you were the first to purchase, your sequence number's 1. If the last, it's going to be much higher. Some airlines (especially low-cost) have used sequence number blocks to board economy passengers
+
+=====================================================================
