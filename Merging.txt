@@ -1,0 +1,424 @@
+=======================
+Table of files
+
+CREATE TABLE files (
+	fsid SERIAL,
+	nameoffile VARCHAR(30) UNIQUE NOT NULL
+)
+
+INSERT INTO files (nameoffile) VALUES 	('aero'),
+										('boarding'),
+										('forumprofiles'),
+										('points'),
+										('sirena'),
+										('skyteam'),
+										('timetable_')
+=========================================
+
+CREATE TABLE buffer1 (
+	paxid SERIAL,
+	first_name VARCHAR(30) NULL,
+	last_name VARCHAR(30) NULL,
+	someinfo VARCHAR(30) NULL,
+	fid INT NULL,
+	uid INT NULL,
+	traveldoc VARCHAR(30) NULL
+)
+
+INSERT INTO buffer1 (first_name,last_name,someinfo,fid,uid)
+SELECT DISTINCT S.first_name,S.last_name,V1.someinfo,V1.fid,S.uid
+FROM (SELECT DISTINCT fid,someinfo FROM forumprofiles WHERE first_name IS NULL) AS V1 JOIN points AS S ON S.someinfo=V1.someinfo
+
+CREATE TABLE buffer1_2(
+	paxid SERIAL,
+	first_name VARCHAR(30) NULL,
+	last_name VARCHAR(30) NULL,
+	fid INT NULL,
+	uid INT NULL
+)
+
+INSERT INTO buffer1_2(first_name,last_name,fid,uid) SELECT DISTINCT first_name,last_name,fid,uid FROM buffer1
+
+INSERT INTO buffer1 (first_name,last_name,someinfo,uid)
+SELECT DISTINCT F.first_name,F.last_name,F.someinfo,F.uid FROM points AS F JOIN buffer1_2 B ON F.uid=B.uid  WHERE F.someinfo IS NOT NULL
+EXCEPT
+SELECT DISTINCT first_name,last_name,someinfo,uid FROM buffer1
+
+INSERT INTO buffer1 (first_name,last_name,someinfo,uid) 
+SELECT DISTINCT first_name,last_name,someinfo,uid FROM points WHERE uid NOT IN(SELECT DISTINCT uid FROM buffer1)
+
+INSERT INTO buffer1_2 (first_name,last_name,uid,fid) SELECT DISTINCT first_name,last_name,uid,fid FROM buffer1 WHERE uid NOT IN(SELECT DISTINCT uid FROM buffer1_2)
+
+points is done
+
+====================================================================================================================================
+
+CREATE TABLE buffer2(
+	paxid SERIAL,
+	paxnamerus VARCHAR(50) NULL,
+	someinfo VARCHAR(30) NULL,
+	traveldoc VARCHAR(30) NULL
+)
+
+
+INSERT INTO buffer2(paxnamerus,someinfo,traveldoc) 
+SELECT DISTINCT S.paxname,coalesce(S.someinfo,A.someinfo),S.traveldoc 
+FROM (SELECT DISTINCT paxname,someinfo,traveldoc,e_ticket FROM sirena) AS S 
+JOIN (SELECT DISTINCT someinfo,e_ticket FROM aero) AS A 
+ON S.e_ticket=A.e_ticket
+
+CREATE TABLE buffer2_2(
+	paxid SERIAL,
+	paxnamerus VARCHAR(50) NULL,
+	first_name VARCHAR(30) NULL,
+	last_name VARCHAR(30) NULL,
+	fid INT NULL,
+	uid INT NULL
+)
+INSERT INTO buffer2_2 (paxnamerus,first_name,last_name,fid,uid)
+SELECT DISTINCT B2.paxnamerus,B1.first_name,B1.last_name,B1.fid,B1.uid
+FROM buffer2 AS B2 JOIN buffer1 AS B1 ON B2.someinfo=B1.someinfo
+
+INSERT INTO buffer2_2 (first_name,last_name,fid,uid)
+SELECT DISTINCT B1.first_name,B1.last_name,B1.fid,B1.uid
+FROM  buffer1 AS B1
+WHERE B1.uid NOT IN (SELECT uid FROM buffer2_2)
+
+INSERT INTO buffer2_2 (paxnamerus)(
+	SELECT DISTINCT paxnamerus
+	FROM  buffer2 AS B2
+	EXCEPT
+	SELECT DISTINCT paxnamerus
+	FROM buffer2_2
+)
+INSERT INTO buffer2 (paxnamerus,someinfo,traveldoc)
+SELECT DISTINCT paxname,someinfo,traveldoc FROM sirena
+EXCEPT 
+SELECT DISTINCT paxnamerus,someinfo,traveldoc FROM buffer2
+
+
+sirena is done
+
+=====================================================================================
+
+INSERT INTO buffer1 (someinfo,last_name,first_name,fid)(
+SELECT DISTINCT S.someinfo,P.last_name,P.first_name,P.fid FROM skyteam AS S 
+JOIN 
+(	SELECT DISTINCT fid,first_name,last_name,someinfo 
+	FROM forumprofiles WHERE first_name IS NOT NULL) AS P ON S.someinfo=P.someinfo
+EXCEPT 
+SELECT someinfo,last_name,first_name,fid FROM buffer1
+	)
+	
+	
+	SELECT DISTINCT someinfo FROM aero
+EXCEPT 
+SELECT DISTINCT someinfo FROM buffer1
+ UNION 
+ SELECT DISTINCT someinfo FROM buffer2
+ INSERT INTO buffer1 (first_name,last_name,someinfo,fid) SELECT DISTINCT B1.first_name,B1.last_name,V1.someinfo,V1.fid
+FROM
+(SELECT DISTINCT F.someinfo,F.fid FROM forumprofiles AS F JOIN buffer1 AS B ON F.fid=B.fid
+EXCEPT
+SELECT DISTINCT someinfo,fid FROM buffer1
+ ) AS V1 JOIN buffer1 AS B1 ON V1.fid=B1.fid
+ 
+ 
+ INSERT INTO buffer2(paxnamerus,someinfo,traveldoc)
+SELECT DISTINCT paxname,S.someinfo,B.traveldoc FROM sirena AS S JOIN boarding B ON S.e_ticket=B.e_ticket
+EXCEPT 
+SELECT DISTINCT paxnamerus,someinfo,traveldoc FROM buffer2
+
+INSERT INTO buffer1(someinfo,first_name,last_name,fid)(
+(SELECT DISTINCT F.someinfo,B3.first_name,B3.last_name,F.fid FROM
+(SELECT DISTINCT A.someinfo,B.traveldoc FROM aero AS A JOIN boarding B ON A.e_ticket=B.e_ticket
+EXCEPT 
+SELECT DISTINCT someinfo,traveldoc FROM buffer2) AS V1 JOIN forumprofiles AS F ON V1.someinfo=F.someinfo
+JOIN 
+boarding AS B3 ON B3.traveldoc=V1.traveldoc)
+EXCEPT SELECT DISTINCT someinfo,first_name,last_name,fid FROM buffer1
+)
+
+INSERT INTO buffer1 (fid,first_name,last_name)
+(SELECT DISTINCT F.fid,V3.first_name,V3.last_name FROM
+(SELECT DISTINCT D.someinfo,B4.first_name,B4.last_name,B4.traveldoc FROM
+	(SELECT DISTINCT A.paxname FROM
+		(SELECT DISTINCT someinfo FROM buffer1
+			UNION
+			SELECT DISTINCT someinfo FROM buffer2
+		) AS V1 JOIN aero AS A ON V1.someinfo=A.someinfo) AS V2
+		JOIN
+		aero AS D ON D.paxname=V2.paxname
+ 		JOIN boarding AS B4 ON B4.e_ticket=D.e_ticket
+) AS V3 JOIN (SELECT * FROM forumprofiles WHERE first_name IS NULL) AS F
+ON V3.someinfo=F.someinfo  
+ ) 
+ EXCEPT SELECT DISTINCT fid,first_name,last_name FROM buffer1
+ 
+ INSERT INTO buffer1 (fid,first_name,last_name,someinfo)
+SELECT DISTINCT F.fid,B4.first_name,B4.last_name,V3.someinfo FROM
+(SELECT someinfo,e_ticket FROM
+(SELECT DISTINCT A.paxname FROM
+		(SELECT DISTINCT someinfo FROM buffer1
+			UNION
+			SELECT DISTINCT someinfo FROM buffer2
+		) AS V1 JOIN aero AS A ON V1.someinfo=A.someinfo) AS V2
+		JOIN
+		aero AS A2 ON A2.paxname=V2.paxname) AS V3
+		JOIN forumprofiles AS F ON F.someinfo=V3.someinfo
+		JOIN buffer2 AS B3 ON B3.someinfo=V3.someinfo
+		JOIN boarding AS B4 ON B4.traveldoc=B3.traveldoc
+EXCEPT SELECT fid,first_name,last_name,someinfo FROM buffer1
+
+INSERT INTO buffer2(someinfo,paxnamerus,traveldoc)
+(SELECT DISTINCT F2.someinfo,V1.paxname,V1.traveldoc FROM 
+(SELECT DISTINCT F.someinfo,F.fid,P.paxname,P.traveldoc FROM forumprofiles AS F JOIN sirena AS P ON F.someinfo=P.someinfo
+WHERE F.someinfo IS NOT NULL AND F.first_name IS NULL) AS V1
+JOIN forumprofiles AS F2 ON V1.fid=F2.fid
+EXCEPT 
+ SELECT DISTINCT someinfo,paxnamerus,traveldoc FROM buffer2)
+ 
+ CREATE TABLE buffer1_3 (
+	paxid SERIAL,
+	first_name VARCHAR(30) NULL,
+	last_name VARCHAR(30) NULL,
+	someinfo VARCHAR(30) NULL,
+	fid INT NULL,
+	uid INT NULL,
+	traveldoc VARCHAR(30) NULL,
+	paxbirthdate DATE NULL
+)
+INSERT INTO buffer1_3(first_name,last_name,someinfo,fid,uid,traveldoc) SELECT first_name,last_name,someinfo,fid,uid,traveldoc FROM buffer1
+
+INSERT INTO buffer1_3(first_name,last_name,paxbirthdate,someinfo,traveldoc)
+SELECT DISTINCT V1.first_name,V1.last_name,V1.paxbirthdate,V1.someinfo,V1.traveldoc FROM
+(SELECT DISTINCT B.first_name,B.last_name,A.someinfo,B.paxbirthdate,B.traveldoc 
+ FROM boarding AS B LEFT JOIN aero AS A ON B.e_ticket=A.e_ticket JOIN
+ 	(SELECT e_ticket FROM boarding
+	 EXCEPT SELECT e_ticket FROM sirena) AS V0 
+ ON B.e_ticket=V0.e_ticket
+) AS V1 JOIN boarding AS B1 ON V1.traveldoc=B1.traveldoc 
+WHERE V1.traveldoc NOT IN (SELECT DISTINCT traveldoc FROM buffer2) 
+
+INSERT INTO buffer1_3 (first_name,last_name,paxbirthdate,traveldoc)
+SELECT DISTINCT B2.first_name,B2.last_name,B2.paxbirthdate,B2.traveldoc FROM
+(SELECT DISTINCT B.traveldoc FROM boarding AS B JOIN buffer1_3 AS B1 ON B.paxbirthdate=B1.paxbirthdate 
+WHERE B.first_name=B1.first_name AND B.last_name=B1.last_name 
+ EXCEPT
+ (SELECT DISTINCT traveldoc FROM buffer1
+ UNION 
+ SELECT DISTINCT traveldoc FROM buffer2)) AS V1 JOIN boarding AS B2 ON V1.traveldoc=B2.traveldoc 
+ 
+ 
+ CREATE TABLE buffer2_3(
+	paxid SERIAL,
+	paxnamerus VARCHAR(50) NULL,
+	first_name VARCHAR(30) NULL,
+	last_name VARCHAR(30) NULL,
+	fid INT NULL,
+	uid INT NULL,
+	paxbirthdate DATE NULL
+)
+
+INSERT INTO buffer2_3(paxnamerus,last_name,paxbirthdate,fid,uid)
+SELECT DISTINCT B2.paxnamerus,B1.last_name,B1.paxbirthdate,B1.fid,B1.uid 
+FROM (SELECT DISTINCT A.last_name,coalesce(A.uid,B4.uid)AS uid,COALESCE(A.fid,B4.fid)AS fid,A.someinfo,A.paxbirthdate FROM buffer1_3 AS A
+	  JOIN buffer1_3 AS B4 ON B4.someinfo=A.someinfo
+	  WHERE (B4.fid!=A.fid OR B4.fid IS NULL OR A.fid IS NULL)AND(B4.uid!=A.uid OR B4.uid IS NULL OR A.uid IS NULL)
+	 ) AS B1 ,
+buffer2 AS B2
+WHERE B1.someinfo=B2.someinfo  ORDER BY B2.paxnamerus,B1.last_name 
+
+INSERT INTO buffer2_3(paxnamerus,last_name,paxbirthdate,fid,uid)
+SELECT DISTINCT B2.paxnamerus,B1.last_name,B1.paxbirthdate,B1.fid,B1.uid 
+FROM buffer1_3 AS B1 ,
+buffer2 AS B2
+WHERE B1.someinfo=B2.someinfo AND  paxnamerus NOT IN(SELECT DISTINCT paxnamerus FROM buffer2_3) 
+
+INSERT INTO buffer2_3(paxnamerus)
+SELECT DISTINCT B2.paxnamerus
+FROM buffer2 AS B2
+WHERE  paxnamerus NOT IN(SELECT DISTINCT paxnamerus FROM buffer2_3) 
+
+INSERT INTO buffer2_3(last_name,paxbirthdate,uid,fid)
+SELECT DISTINCT last_name,paxbirthdate,uid,fid
+FROM buffer1_3 
+EXCEPT SELECT DISTINCT last_name,paxbirthdate,uid,fid FROM buffer2_3
+
+
+CREATE TABLE pax (
+	paxid SERIAL
+)
+
+INSERT INTO pax SELECT paxid FROM buffer2_3
+
+
+================================================================================
+CREATE TABLE airlinesv2(
+	paxid INT NOT NULL,
+	e_ticket VARCHAR(30) NULL,
+	departdate DATE NULL,
+	departtime TIME NULL,
+	arrivaldate DATE NULL,
+	arrivaltime TIME NULL,
+	flight VARCHAR(30) NULL,
+	codesh BOOLEAN NULL,
+	codefrom VARCHAR(10) NULL,
+	codedest VARCHAR(10) NULL,
+	code VARCHAR(10) NULL,
+	meal VARCHAR(10) NULL,
+	trvcls VARCHAR(10) NULL,
+	fare VARCHAR(10) NULL,
+	baggage VARCHAR(10) NULL,
+	paxadditionalinfo VARCHAR(100) NULL,
+	agentinfo VARCHAR(30) NULL,
+	status VARCHAR(30) NULL,
+	sequence_ INT NULL,
+	forum_trvcls VARCHAR(30) NULL,
+	bb VARCHAR(30) NULL,
+	city VARCHAR(30) NULL
+)
+
+INSERT INTO airlinesv2(paxid,e_ticket,departdate,departtime,arrivaldate,arrivaltime,flight,codesh,codefrom,codedest,code,meal,trvcls,fare,baggage,paxadditionalinfo,agentinfo,sequence_,forum_trvcls,bb,city)
+SELECT B2.paxid,S.e_ticket,S.departdate,S.departtime,S.arrivaldate,S.arrivaltime,S.flight,S.codesh,S.codefrom,S.codedest,S.code,S.meal,S.trvcls,
+S.fare,S.baggage,S.paxadditionalinfo,S.agentinfo,aero.sequence_,F.forum_trvcls,B.baggage,B.dest
+FROM buffer2_3 AS B2 JOIN sirena AS S ON B2.paxnamerus=S.paxname
+JOIN  forumprofiles AS F ON B2.fid=F.fid 
+JOIN boarding AS B ON B.e_ticket=S.e_ticket
+JOIN aero ON aero.e_ticket=S.e_ticket
+
+INSERT INTO airlinesv2(paxid,e_ticket,departdate,departtime,arrivaldate,arrivaltime,flight,codesh,codefrom,codedest,code,meal,trvcls,fare,baggage,paxadditionalinfo,agentinfo,forum_trvcls,bb,city)
+SELECT B2.paxid,S.e_ticket,S.departdate,S.departtime,S.arrivaldate,S.arrivaltime,S.flight,S.codesh,S.codefrom,S.codedest,S.code,S.meal,S.trvcls,
+S.fare,S.baggage,S.paxadditionalinfo,S.agentinfo,F.forum_trvcls,B.baggage,B.dest
+FROM buffer2_3 AS B2 JOIN sirena AS S ON B2.paxnamerus=S.paxname
+JOIN  forumprofiles AS F ON B2.fid=F.fid 
+JOIN boarding AS B ON B.e_ticket=S.e_ticket
+EXCEPT SELECT
+paxid,e_ticket,departdate,departtime,arrivaldate,arrivaltime,flight,codesh,codefrom,codedest,code,meal,trvcls,fare,baggage,paxadditionalinfo,agentinfo,forum_trvcls,bb,city
+from airlinesv2
+
+INSERT INTO airlinesv2(paxid,e_ticket,departdate,departtime,arrivaldate,arrivaltime,flight,codesh,codefrom,codedest,code,meal,trvcls,fare,baggage,paxadditionalinfo,agentinfo,bb,city)
+SELECT B2.paxid,S.e_ticket,S.departdate,S.departtime,S.arrivaldate,S.arrivaltime,S.flight,S.codesh,S.codefrom,S.codedest,S.code,S.meal,S.trvcls,
+S.fare,S.baggage,S.paxadditionalinfo,S.agentinfo,B.baggage,B.dest
+FROM buffer2_3 AS B2 JOIN sirena AS S ON B2.paxnamerus=S.paxname
+JOIN boarding AS B ON B.e_ticket=S.e_ticket
+EXCEPT SELECT
+paxid,e_ticket,departdate,departtime,arrivaldate,arrivaltime,flight,codesh,codefrom,codedest,code,meal,trvcls,fare,baggage,paxadditionalinfo,agentinfo,bb,city
+from airlinesv2
+
+
+INSERT INTO airlinesv2(paxid,e_ticket,departdate,departtime,arrivaldate,arrivaltime,flight,codesh,codefrom,codedest,code,meal,trvcls,fare,baggage,paxadditionalinfo,agentinfo,sequence_)
+SELECT B2.paxid,S.e_ticket,S.departdate,S.departtime,S.arrivaldate,S.arrivaltime,S.flight,S.codesh,S.codefrom,S.codedest,S.code,S.meal,S.trvcls,
+S.fare,S.baggage,S.paxadditionalinfo,S.agentinfo,aero.sequence_
+FROM buffer2_3 AS B2 JOIN sirena AS S ON B2.paxnamerus=S.paxname
+JOIN aero  ON aero.e_ticket=S.e_ticket
+EXCEPT SELECT
+paxid,e_ticket,departdate,departtime,arrivaldate,arrivaltime,flight,codesh,codefrom,codedest,code,meal,trvcls,fare,baggage,paxadditionalinfo,agentinfo,sequence_
+from airlinesv2
+
+
+INSERT INTO airlinesv2(paxid,e_ticket,departdate,departtime,arrivaldate,arrivaltime,flight,codesh,codefrom,codedest,code,meal,trvcls,fare,baggage,paxadditionalinfo,agentinfo,forum_trvcls)
+SELECT B2.paxid,S.e_ticket,S.departdate,S.departtime,S.arrivaldate,S.arrivaltime,S.flight,S.codesh,S.codefrom,S.codedest,S.code,S.meal,S.trvcls,
+S.fare,S.baggage,S.paxadditionalinfo,S.agentinfo,F.forum_trvcls
+FROM buffer2_3 AS B2 JOIN sirena AS S ON B2.paxnamerus=S.paxname
+JOIN  forumprofiles AS F ON B2.fid=F.fid 
+EXCEPT SELECT
+paxid,e_ticket,departdate,departtime,arrivaldate,arrivaltime,flight,codesh,codefrom,codedest,code,meal,trvcls,fare,baggage,paxadditionalinfo,agentinfo,forum_trvcls
+from airlinesv2
+
+INSERT INTO airlinesv2(paxid,e_ticket,departdate,departtime,arrivaldate,arrivaltime,flight,codesh,codefrom,codedest,code,meal,trvcls,fare,baggage,paxadditionalinfo,agentinfo)
+SELECT B2.paxid,S.e_ticket,S.departdate,S.departtime,S.arrivaldate,S.arrivaltime,S.flight,S.codesh,S.codefrom,S.codedest,S.code,S.meal,S.trvcls,
+S.fare,S.baggage,S.paxadditionalinfo,S.agentinfo
+FROM buffer2_3 AS B2 JOIN sirena AS S ON B2.paxnamerus=S.paxname
+EXCEPT SELECT
+paxid,e_ticket,departdate,departtime,arrivaldate,arrivaltime,flight,codesh,codefrom,codedest,code,meal,trvcls,fare,baggage,paxadditionalinfo,agentinfo
+from airlinesv2
+
+INSERT INTO airlinesv2(paxid,e_ticket,departdate,departtime,flight,codesh,code,bb,city)
+SELECT B2.paxid,S.e_ticket,S.date_,S.time_,S.flight,S.codesh,S.code,S.baggage,S.dest
+FROM buffer2_3 AS B2 JOIN boarding AS S ON B2.last_name=S.last_name
+WHERE B2.paxbirthdate=S.paxbirthdate
+EXCEPT SELECT
+paxid,e_ticket,departdate,departtime,flight,codesh,code,bb,city
+FROM airlinesv2
+
+
+INSERT INTO airlinesv2(paxid,e_ticket,departdate,departtime,flight,sequence_,codefrom,codedest,trvcls)
+SELECT DISTINCT B2.paxid,A.e_ticket,A.date_,A.time_,A.flight,A.sequence_,A.codefrom,A.codedest,A.trvcls
+FROM (SELECT DISTINCT B.paxid,buffer2.someinfo 
+	  FROM buffer2_3 AS B JOIN buffer2 ON B.paxnamerus=buffer2.paxnamerus
+	 UNION
+	  SELECT B.paxid,buffer1_3.someinfo
+	  FROM buffer2_3 AS B JOIN buffer1_3 ON B.last_name=buffer1_3.last_name
+	  WHERE B.paxbirthdate=buffer1_3.paxbirthdate
+	 )AS B2
+JOIN aero AS A ON B2.someinfo=A.someinfo
+EXCEPT SELECT
+paxid,e_ticket,departdate,departtime,flight,sequence_,codefrom,codedest,trvcls
+FROM airlinesv2
+
+INSERT INTO airlinesv2(paxid,e_ticket,departdate,departtime,flight,code,bb,codesh,city)
+SELECT DISTINCT B2.paxid,A.e_ticket,A.date_,A.time_,A.flight,A.code,A.baggage,A.codesh,A.dest
+FROM (SELECT DISTINCT B.paxid,buffer2.traveldoc 
+	  FROM buffer2_3 AS B JOIN buffer2 ON B.paxnamerus=buffer2.paxnamerus
+	 UNION
+	  SELECT B.paxid,buffer1_3.traveldoc
+	  FROM buffer2_3 AS B JOIN buffer1_3 ON B.last_name=buffer1_3.last_name
+	  WHERE B.paxbirthdate=buffer1_3.paxbirthdate
+	 )AS B2
+JOIN boarding AS A ON B2.traveldoc=A.traveldoc 
+EXCEPT SELECT
+paxid,e_ticket,departdate,departtime,flight,code,bb,codesh,city
+FROM airlinesv2
+
+INSERT INTO airlinesv2 (paxid,e_ticket,codefrom,codedest,sequence_,flight,trvcls,departdate,departtime)
+SELECT DISTINCT V1.paxid,A2.e_ticket,A2.codefrom,A2.codedest,A2.sequence_,A2.flight,A2.trvcls,A2.date_,A2.time_ FROM
+(SELECT DISTINCT A.paxname,B1.first_name,B1.last_name,B1.paxid FROM aero AS A ,
+(SELECT DISTINCT B.first_name,B.last_name,B2.paxid FROM buffer1_3 AS B JOIN buffer2_3 AS B2 ON B2.last_name=B.last_name 
+ WHERE B2.paxbirthdate=B.paxbirthdate) AS B1 
+WHERE  (A.paxname = B1.first_name||' '||B1.last_name)  
+) AS V1 JOIN aero AS A2 ON V1.paxname=A2.paxname
+EXCEPT SELECT paxid,e_ticket,codefrom,codedest,sequence_,flight,trvcls,departdate,departtime FROM airlinesv2
+
+
+INSERT INTO airlinesv2 (paxid,e_ticket,codefrom,codedest,sequence_,flight,trvcls,departdate,departtime)
+SELECT DISTINCT V1.paxid,A2.e_ticket,A2.codefrom,A2.codedest,A2.sequence_,A2.flight,A2.trvcls,A2.date_,A2.time_ FROM
+(SELECT DISTINCT A.paxname,B1.first_name,B1.last_name,B1.paxid FROM aero AS A ,
+(SELECT DISTINCT B.first_name,B.last_name,B2.paxid FROM buffer1_3 AS B JOIN buffer2_3 AS B2 ON B2.last_name=B.last_name 
+ WHERE B2.paxbirthdate=B.paxbirthdate) AS B1 
+WHERE  (A.paxname = B1.last_name||' '||B1.first_name)  
+) AS V1 JOIN aero AS A2 ON V1.paxname=A2.paxname
+EXCEPT SELECT paxid,e_ticket,codefrom,codedest,sequence_,flight,trvcls,departdate,departtime FROM airlinesv2
+
+INSERT INTO airlinesv2(paxid,e_ticket,codefrom,codedest,sequence_,flight,trvcls,departdate,departtime)
+SELECT DISTINCT V1.paxid,A2.e_ticket,A2.codefrom,A2.codedest,A2.sequence_,A2.flight,A2.trvcls,A2.date_,A2.time_ FROM
+(SELECT DISTINCT A.paxname,B1.first_name,B1.last_name,B1.paxid FROM aero AS A ,
+(SELECT DISTINCT B.first_name,B.last_name,B2.paxid,B.someinfo FROM buffer1_3 AS B JOIN buffer2_3 AS B2 ON B2.last_name=B.last_name 
+ WHERE B2.paxbirthdate=B.paxbirthdate) AS B1  
+WHERE  (A.paxname LIKE B1.last_name||'%'||B1.first_name||'%')  OR (A.paxname LIKE B1.first_name||'%'||B1.last_name||'%')
+) AS V1 JOIN aero AS A2 ON V1.paxname=A2.paxname
+EXCEPT SELECT paxid,e_ticket,codefrom,codedest,sequence_,flight,trvcls,departdate,departtime FROM airlinesv2
+
+INSERT INTO airlinesv2 ( flight,departdate,codefrom,codedest,fare,paxid)
+SELECT DISTINCT flight,date_,codefrom,codedest,fare,paxid FROM points AS P  JOIN buffer2_3 AS B1 ON P.uid=B1.uid
+EXCEPT SELECT flight,departdate,codefrom,codedest,fare,paxid FROM airlinesv2
+
+
+
+ INSERT INTO airlinesv2(departdate,codesh,codefrom,codedest,flight,paxid)
+SELECT DISTINCT date_,codesh,codefrom,codedest,flight,paxid FROM forumprofiles AS F , (
+	SELECT DISTINCT buffer1_3.fid,buffer2_3.paxid,someinfo FROM buffer1_3 JOIN buffer2_3 ON  buffer2_3.fid=buffer1_3.fid
+) AS V1 
+WHERE  F.fid=V1.fid
+EXCEPT SELECT departdate,codesh,codefrom,codedest,flight,paxid FROM airlinesv2
+
+INSERT INTO airlinesv2(departdate,flight,fare,trvcls,codefrom,codedest,paxid)
+SELECT DISTINCT date_,flight,fare,trvcls,codefrom,codedest,paxid FROM
+(SELECT B.paxid,B1.someinfo FROM buffer2_3 AS B JOIN buffer1_3 AS B1 ON B.last_name=B1.last_name
+ WHERE B.paxbirthdate=B1.paxbirthdate
+ UNION SELECT B3.paxid,B2.someinfo FROM buffer2_3 AS B3 JOIN buffer2 AS B2 ON B3.paxnamerus=B2.paxnamerus
+) AS V1 JOIN skyteam AS S ON V1.someinfo=S.someinfo
+EXCEPT SELECT DISTINCT departdate,flight,fare,trvcls,codefrom,codedest,paxid FROM airlinesv2
+
+CREATE TABLE airlines AS
+SELECT DISTINCT * FROM airlinesv2
