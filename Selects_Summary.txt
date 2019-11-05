@@ -1,0 +1,173 @@
+// Quantity of all flights
+CREATE TABLE SUMMARY_PART1 AS
+SELECT DISTINCT P.paxid,COUNT(*) AS quantity FROM airlines AS A JOIN buffer2_3 AS P ON A.paxid=P.paxid GROUP BY P.paxid
+
+//Added infromation about having meal
+
+CREATE TABLE SUMMARY_PART2 AS
+SELECT DISTINCT P1.paxid,P1.quantity,COALESCE(V1.had_meal,-1) AS had_meal FROM 
+SUMMARY_PART1 AS P1 LEFT JOIN
+(SELECT DISTINCT P.paxid,0 AS had_meal FROM buffer2_3 AS P JOIN airlines AS A ON P.paxid=A.paxid 
+EXCEPT
+ SELECT DISTINCT P.paxid,0 AS had_meal FROM buffer2_3 AS P JOIN airlines AS A ON P.paxid=A.paxid WHERE  A.meal IS NOT NULL ) AS V1
+ ON P1.paxid=V1.paxid
+
+
+//How premium client
+
+CREATE TABLE summary_part3 AS
+SELECT DISTINCT P.paxid,P.quantity,P.had_meal,COALESCE(V1.trvcls,V2.trvcls,V3.trvcls,V4.trvcls,V5.trvcls,V6.trvcls,0) AS premium FROM 
+summary_part2 AS P LEFT JOIN
+(SELECT DISTINCT paxid,-6 AS trvcls FROM airlines WHERE trvcls IS NOT NULL
+EXCEPT (SELECT DISTINCT paxid,-6 AS trvcls  FROM airlines WHERE trvcls='Y' OR trvcls='P' OR trvcls='J'  )) AS V1
+ON P.paxid=V1.paxid LEFT JOIN
+(SELECT DISTINCT paxid,-5 AS trvcls FROM airlines WHERE trvcls IS NOT NULL
+EXCEPT (SELECT DISTINCT paxid,-5 AS trvcls  FROM airlines WHERE trvcls='Y' OR trvcls='P'  )) AS V2
+ON P.paxid=V2.paxid LEFT JOIN
+(SELECT DISTINCT paxid,-4 AS trvcls FROM airlines WHERE trvcls IS NOT NULL
+EXCEPT (SELECT DISTINCT paxid,-4 AS trvcls  FROM airlines WHERE trvcls='Y'  )) AS V3
+ON P.paxid=V3.paxid LEFT JOIN
+(SELECT DISTINCT paxid,0 AS trvcls FROM airlines WHERE trvcls IS NOT NULL
+EXCEPT (SELECT DISTINCT paxid,0 AS trvcls  FROM airlines WHERE trvcls='A' OR trvcls='P' OR trvcls='J'  )) AS V4
+ON P.paxid=V4.paxid LEFT JOIN
+(SELECT DISTINCT paxid,-1 AS trvcls FROM airlines WHERE trvcls IS NOT NULL
+EXCEPT (SELECT DISTINCT paxid,-1 AS trvcls  FROM airlines WHERE trvcls='A' OR trvcls='J'  )) AS V5
+ON P.paxid=V5.paxid LEFT JOIN
+(SELECT DISTINCT paxid,-2 AS trvcls FROM airlines WHERE trvcls IS NOT NULL
+EXCEPT (SELECT DISTINCT paxid,-2 AS trvcls  FROM airlines WHERE trvcls='A' )) AS V6
+ON P.paxid=V6.paxid 
+
+//How premium client from forum
+
+CREATE TABLE summary_part4 AS
+SELECT DISTINCT P.paxid,P.quantity,P.had_meal,P.premium,COALESCE(V1.trvcls,V2.trvcls,V4.trvcls,V5.trvcls,0) AS forum_premium FROM 
+summary_part3 AS P LEFT JOIN
+(SELECT DISTINCT paxid,-3 AS trvcls FROM airlines WHERE forum_trvcls IS NOT NULL
+EXCEPT (SELECT DISTINCT paxid,-3 AS trvcls  FROM airlines WHERE forum_trvcls='Basic' OR forum_trvcls='Elite'  )) AS V1
+ON P.paxid=V1.paxid LEFT JOIN
+(SELECT DISTINCT paxid,-2 AS trvcls FROM airlines WHERE forum_trvcls IS NOT NULL
+EXCEPT (SELECT DISTINCT paxid,-2 AS trvcls  FROM airlines WHERE forum_trvcls='Basic'  )) AS V2
+ON P.paxid=V2.paxid LEFT JOIN
+(SELECT DISTINCT paxid,0 AS trvcls FROM airlines WHERE forum_trvcls IS NOT NULL
+EXCEPT (SELECT DISTINCT paxid,0 AS trvcls  FROM airlines WHERE forum_trvcls='Elite+' OR forum_trvcls='Elite' )) AS V4
+ON P.paxid=V4.paxid LEFT JOIN
+(SELECT DISTINCT paxid,-1 AS trvcls FROM airlines WHERE forum_trvcls IS NOT NULL
+EXCEPT (SELECT DISTINCT paxid,-1 AS trvcls  FROM airlines WHERE forum_trvcls='Elite+' )) AS V5
+ON P.paxid=V5.paxid 
+
+//If had information about agentinfo
+
+CREATE TABLE summary_part5 AS
+SELECT P.paxid,P.quantity,P.had_meal,P.premium,P.forum_premium,COALESCE(had_agentinfo,1) AS  had_agentinfo FROM
+summary_part4 AS P LEFT JOIN 
+(SELECT DISTINCT P.paxid,0 AS had_agentinfo FROM buffer2_3 AS P JOIN airlines AS A ON P.paxid=A.paxid 
+EXCEPT
+ SELECT DISTINCT P.paxid,0 AS had_agentinfo FROM buffer2_3 AS P JOIN airlines AS A ON P.paxid=A.paxid WHERE  A.agentinfo IS NULL ) AS V1
+ ON P.paxid=V1.paxid
+
+
+//Added information about quantity of baggage
+
+CREATE TABLE summary_part6 AS
+SELECT DISTINCT P.paxid,P.quantity,P.had_meal,P.premium,P.forum_premium,P.had_agentinfo,COALESCE(V1.trvcls,V2.trvcls,V4.trvcls,V5.trvcls,0) AS had_baggage FROM 
+summary_part5 AS P LEFT JOIN
+(SELECT DISTINCT paxid,-3 AS trvcls FROM airlines WHERE baggage IS NOT NULL
+EXCEPT (SELECT DISTINCT paxid,-3 AS trvcls  FROM airlines WHERE baggage='0PC' OR baggage='1PC'  )) AS V1
+ON P.paxid=V1.paxid LEFT JOIN
+(SELECT DISTINCT paxid,-2 AS trvcls FROM airlines WHERE baggage IS NOT NULL
+EXCEPT (SELECT DISTINCT paxid,-2 AS trvcls  FROM airlines WHERE baggage='0PC'  )) AS V2
+ON P.paxid=V2.paxid LEFT JOIN
+(SELECT DISTINCT paxid,0 AS trvcls FROM airlines WHERE baggage IS NOT NULL
+EXCEPT (SELECT DISTINCT paxid,0 AS trvcls  FROM airlines WHERE baggage='2PC' OR baggage='1PC' )) AS V4
+ON P.paxid=V4.paxid LEFT JOIN
+(SELECT DISTINCT paxid,-1 AS trvcls FROM airlines WHERE baggage IS NOT NULL
+EXCEPT (SELECT DISTINCT paxid,-1 AS trvcls  FROM airlines WHERE baggage='2PC' )) AS V5
+ON P.paxid=V5.paxid 
+
+
+//Added information about delayed baggage
+
+CREATE TABLE summary_part7 AS
+SELECT DISTINCT P.paxid,P.quantity,P.had_meal,P.premium,P.forum_premium,P.had_agentinfo,P.had_baggage,COALESCE(V5.issue,0) AS issue_baggage FROM 
+summary_part6 AS P LEFT JOIN
+(SELECT DISTINCT paxid,1 AS issue FROM airlines WHERE bb='Delayed') AS V5
+ON P.paxid=V5.paxid 
+
+//Added information about persons without information about bonus card
+
+CREATE TABLE summary_part8 AS 
+SELECT DISTINCT P.paxid,P.quantity,P.had_meal,P.premium,P.forum_premium,P.had_agentinfo,P.had_baggage,P.issue_baggage,
+COALESCE(V5.issue,1) AS NULLSOMEINFO FROM 
+summary_part7 AS P LEFT JOIN
+(SELECT DISTINCT paxid,0 AS issue FROM 
+(
+	SELECT DISTINCT B.paxid FROM buffer2_3 AS B JOIN buffer1_3 AS B1 ON B.uid=B1.uid
+	WHERE B1.someinfo IS NOT NULL
+	UNION
+	SELECT DISTINCT B.paxid FROM buffer2_3 AS B JOIN buffer1_3 AS B1 ON B.fid=B1.fid
+	WHERE B1.someinfo IS NOT NULL
+	UNION
+	SELECT DISTINCT B.paxid FROM buffer2_3 AS B JOIN buffer1_3 AS B1 ON B.last_name=B1.last_name
+	WHERE B1.someinfo IS NOT NULL AND B.paxbirthdate=B1.paxbirthdate
+	UNION
+	SELECT DISTINCT B.paxid FROM buffer2_3 AS B JOIN buffer2 AS B1 ON B.paxnamerus=B1.paxnamerus
+	WHERE B1.someinfo IS NOT NULL
+) AS V4
+) AS V5
+ON P.paxid=V5.paxid 
+
+
+//Added information about persons without information about travel document
+
+CREATE TABLE summary_part9 AS 
+SELECT DISTINCT P.paxid,P.quantity,P.had_meal,P.premium,P.forum_premium,P.had_agentinfo,P.had_baggage,P.issue_baggage,P.nullsomeinfo,
+COALESCE(V5.issue,1) AS nulltraveldoc FROM 
+summary_part8 AS P LEFT JOIN
+(SELECT DISTINCT paxid,0 AS issue FROM 
+(
+	SELECT DISTINCT B.paxid FROM buffer2_3 AS B JOIN buffer1_3 AS B1 ON B.uid=B1.uid
+	WHERE B1.traveldoc IS NOT NULL
+	UNION
+	SELECT DISTINCT B.paxid FROM buffer2_3 AS B JOIN buffer1_3 AS B1 ON B.fid=B1.fid
+	WHERE B1.traveldoc IS NOT NULL
+	UNION
+	SELECT DISTINCT B.paxid FROM buffer2_3 AS B JOIN buffer1_3 AS B1 ON B.last_name=B1.last_name
+	WHERE B1.traveldoc IS NOT NULL AND B.paxbirthdate=B1.paxbirthdate
+	UNION
+	SELECT DISTINCT B.paxid FROM buffer2_3 AS B JOIN buffer2 AS B1 ON B.paxnamerus=B1.paxnamerus
+	WHERE B1.traveldoc IS NOT NULL
+) AS V4
+) AS V5
+ON P.paxid=V5.paxid 
+
+
+//Added information about persons without information about their birthday
+
+CREATE TABLE summary_part10 AS
+SELECT DISTINCT P.paxid,P.quantity,P.had_meal,P.premium,P.forum_premium,P.had_agentinfo,P.had_baggage,
+P.issue_baggage,P.nullsomeinfo,P.nulltraveldoc,
+COALESCE(V5.issue,1) AS nullbirthdate FROM 
+summary_part9 AS P LEFT JOIN
+(SELECT DISTINCT paxid,0 AS issue FROM buffer2_3 WHERE paxbirthdate IS NOT NULL
+) AS V5
+ON P.paxid=V5.paxid   
+
+//Added information about max quantity flights in one country
+
+CREATE TABLE summary_part11 AS 
+SELECT DISTINCT P.paxid,P.quantity,P.had_meal,P.premium,P.forum_premium,P.had_agentinfo,P.had_baggage,
+P.issue_baggage,P.nullsomeinfo,P.nulltraveldoc,
+P.nullbirthdate,COALESCE(V2.maxflight,0) AS maxflight FROM 
+summary_part10 AS P LEFT JOIN
+(SELECT DISTINCT V1.paxid,max(V1.q) AS maxflight FROM
+(SELECT DISTINCT P.paxid,COUNT(*) AS q,C.country FROM 
+summary_part10 AS P JOIN airlines AS A ON P.paxid=A.paxid
+RIGHT JOIN countries AS C 
+ON ( A.codedest=C.code_) WHERE ((A.city IS NULL)OR(A.city=C.city)) AND (C.country!='Russian' AND C.country!='Russian Federation')
+GROUP BY P.paxid,C.country) AS V1 
+GROUP BY V1.paxid) AS V2 ON V2.paxid=P.paxid
+
+//
+CREATE TABLE summary AS 
+SELECT * FROM summary_part11
+WHERE quantity>=(SELECT avg(quantity) FROM summary_part11)

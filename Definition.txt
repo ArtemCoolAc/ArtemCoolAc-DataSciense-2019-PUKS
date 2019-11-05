@@ -24,3 +24,10 @@ Sequence Number (sequence_) definition
 It's usually the order in which tickets have been bought for the flight. If you were the first to purchase, your sequence number's 1. If the last, it's going to be much higher. Some airlines (especially low-cost) have used sequence number blocks to board economy passengers
 
 =====================================================================
+
+Assistance Required 
+When somebody is disabled to move themself 
+
+Travel with infant
+When somebody has little children
+
